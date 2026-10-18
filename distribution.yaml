@@ -1,0 +1,56 @@
+# Hermes profile distribution manifest for the Threat Intelligence Analyst role.
+# Install:  hermes profile install https://github.com/wservices/agent-threat-intelligence-analyst.git
+# Fields validated against hermes_cli/profile_distribution.py (Hermes 0.21.x).
+
+name: threat-intelligence-analyst
+version: 0.1.0
+description: >-
+  Threat intelligence analyst: tracks CVEs/vendor advisories and public exploits
+  (KEV/EPSS), follows malware families and campaigns from public reporting, maps
+  adversary TTPs to MITRE ATT&CK, enriches IOCs (IP/domain/hash/URL) across OSINT
+  and threat feeds, and aggregates/normalizes feeds into a deduped IOC set. Ships
+  prioritized intel briefs and machine-readable IOC packages (STIX/CSV) to the
+  Detection Engineer and Incident Responder. Research and advisory only — it never
+  actively engages adversary infrastructure. (Kanban decomposer: routes threat-
+  intel, CVE-tracking, IOC-enrichment, TTP-mapping, and campaign-tracking tasks
+  here.)
+hermes_requires: ">=0.21.0"
+author: Pascal (pascal), Hermes Agent
+license: MIT
+
+# config.yaml is intentionally NOT distribution-owned, so installing this role
+# never overwrites the user's model/provider choice. The role layers SOUL.md,
+# skills/, and the env vars below onto the user's base config.
+distribution_owned:
+  - SOUL.md
+  - skills
+  - distribution.yaml
+  - changelogs
+
+# Credentials the role needs. Hermes generates a .env.EXAMPLE from these; the
+# user fills a real .env (never committed) and forwards the names via
+# docker_forward_env into the Kali sandbox. All are optional and key-gated: a var
+# left unset simply disables the feed/source that needs it. Values are never
+# logged. Use read-only / least-privilege API keys everywhere.
+env_requires:
+  - name: VIRUSTOTAL_API_KEY
+    required: false
+    description: "VirusTotal API key (read-only); hash/domain/IP/URL reputation lookups"
+  - name: ABUSEIPDB_API_KEY
+    required: false
+    description: "AbuseIPDB API key (read-only); IP abuse-confidence reputation"
+  - name: SHODAN_API_KEY
+    required: false
+    description: "Shodan API key (read-only); passive host/banner context for an IP"
+  - name: OTX_API_KEY
+    required: false
+    description: "AlienVault OTX API key (read-only); pulses, IOCs, and feed subscriptions"
+  - name: MISP_URL
+    required: false
+    description: "MISP instance base URL, e.g. https://misp.internal (read-only API user)"
+  - name: MISP_API_KEY
+    required: false
+    description: "MISP automation key for a read-only user (search events/attributes)"
+  - name: NVD_API_KEY
+    required: false
+    description: "Optional NVD API key (raises CVE-lookup rate limit 5->50/30s)"

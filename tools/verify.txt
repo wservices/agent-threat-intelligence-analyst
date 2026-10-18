@@ -1,0 +1,5 @@
+jq
+rg
+curl
+whois
+dig

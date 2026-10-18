@@ -1,0 +1,12 @@
+# threat-intelligence-analyst role tool layer (APT). Many core tools come from
+# the shared base image (agents/shared/cybersecurity/security-tooling); listed
+# here are the tools this role depends on, so the manifest is self-sufficient if
+# the base image is not used. All are used read-only (API/feed pulls, parsing,
+# passive DNS/registration context). python3 ships in the base image.
+#
+# Core (also in base image):
+jq                # parse/filter JSON feeds and API responses
+ripgrep           # fast search over reports and feed files (rg)
+curl              # read-only HTTPS pulls to CVE/advisory + reputation/feed APIs
+whois             # registration/ownership lookup (passive)
+dnsutils          # provides dig — DNS / passive-DNS context (passive)

@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+# Secrets & local env
+.env
+*.pem
+*.key
+id_*
+# Intel work / evidence (never commit real feeds, responses, or indicators)
+intel/
+evidence/
+feeds/
+# OS
+.DS_Store
