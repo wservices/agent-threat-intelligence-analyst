@@ -1,7 +1,7 @@
 ---
 name: threat-feed-aggregation
 description: Pull, normalize, and dedupe threat-feed IOCs.
-version: 0.1.0
+version: 0.2.0
 author: Pascal (pascal), Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -39,6 +39,15 @@ scoring on disk; it never contacts the indicators themselves.
 - Disk space under `intel/<id>/feeds/` for raw pulls (kept as evidence).
 
 ## How to Run
+
+Once feeds are pulled to disk (steps 2–3), merge, dedupe, and age them with the
+bundled offline deduper — it merges `first_seen`/`last_seen`, unions sources, and
+takes max confidence across JSON and/or CSV feed files:
+`terminal(command="python3 scripts/feed_dedup.py --max-age-days 90 intel/feeds/otx.json intel/feeds/misp.csv --csv > intel/feeds/merged.csv", timeout=30)`
+
+When a feed arrives as a STIX 2.x bundle, summarize its indicators, malware,
+attack-patterns, and relationships first:
+`terminal(command="python3 scripts/stix_ioc_extract.py --json intel/feeds/bundle.json", timeout=30)`
 
 Pull subscribed OTX pulses since a date and flatten to `type<TAB>indicator`:
 `terminal(command="curl -s -H \"X-OTX-API-KEY: $OTX_API_KEY\" 'https://otx.alienvault.com/api/v1/pulses/subscribed?modified_since=2026-10-01' | jq -r '.results[].indicators[] | [.type,.indicator] | @tsv' > intel/feeds/otx.tsv", timeout=120)`
@@ -107,6 +116,12 @@ print(json.dumps([{"type":t,"value":v,"sources":sorted(s),"source_count":len(s)}
 
 ## Verification
 
+- Deduper + STIX reader are offline-tested:
+  `python3 -m pytest tests/test_feed_dedup.py tests/test_stix_ioc_extract.py -q`
+  covers (type,value) merge, source union, first/last-seen reconciliation, max
+  confidence, age-out, and STIX indicator/pattern/relationship parsing.
+- `scripts/feed_dedup.py` prints `merged N -> M unique; aged out K` to stderr;
+  `M` equals the number of distinct `(type,value)` pairs across the inputs.
 - `cut -f1 merged.tsv | sort | uniq -c` shows per-type counts and the merged file
   has no duplicate `(type,value)` lines (`sort | uniq -d` on the pair is empty).
 - Offline shape check (no network/key):

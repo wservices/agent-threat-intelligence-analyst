@@ -1,7 +1,7 @@
 ---
 name: ioc-enrichment
 description: Enrich IPs, domains, hashes, URLs via OSINT feeds.
-version: 0.1.0
+version: 0.2.0
 author: Pascal (pascal), Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -41,6 +41,11 @@ infrastructure.
 - Shared skill `passive-reconnaissance` for deeper passive domain/IP OSINT.
 
 ## How to Run
+
+First normalize the raw indicators (step 1) with the bundled, offline helper. It
+refangs defanged input, classifies and dedupes by type, and re-emits defanged —
+feed its `--no-defang --json` output into the lookups below:
+`terminal(command="python3 scripts/ioc_normalize.py --json evidence/advisory.txt", timeout=30)`
 
 Hash reputation via VirusTotal (lookup only, never a file upload):
 `terminal(command="curl -s -H \"x-apikey: $VIRUSTOTAL_API_KEY\" 'https://www.virustotal.com/api/v3/files/44d88612fea8a8f36de82e1278abb02f' | jq '.data.attributes.last_analysis_stats'", timeout=30)`
@@ -108,6 +113,10 @@ dig +short evil.example A; dig +short evil.example NS
 
 ## Verification
 
+- Normalizer is offline-tested: `python3 -m pytest tests/test_ioc_normalize.py -q`
+  covers refang, type classification, dedup, and defang. Quick shape check:
+  `printf 'hxxps://evil[.]example from 8[.]8[.]8[.]8\n' | python3 scripts/ioc_normalize.py --json`
+  lists a `url` and an `ipv4` record, both re-defanged.
 - A known-bad test hash (EICAR MD5 `44d88612fea8a8f36de82e1278abb02f`) returns
   non-zero `malicious` in VT `last_analysis_stats` when a key is set.
 - AbuseIPDB returns a numeric `abuseConfidenceScore` (0–100) for a valid IP.

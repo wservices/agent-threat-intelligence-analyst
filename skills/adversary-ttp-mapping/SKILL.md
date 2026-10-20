@@ -1,7 +1,7 @@
 ---
 name: adversary-ttp-mapping
 description: Map observed behavior to MITRE ATT&CK techniques.
-version: 0.1.0
+version: 0.2.0
 author: Pascal (pascal), Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -39,6 +39,11 @@ no scanning, collection, or interaction with any target.
 - A concrete, written behavior description or evidence set to map against.
 
 ## How to Run
+
+Once the behaviors are mapped to technique IDs (step 6), build a MITRE ATT&CK
+Navigator layer with the bundled offline helper. It validates `Txxxx` /
+`Txxxx.yyy`, rejects malformed IDs, and merges duplicates (keeping the max score):
+`terminal(command="python3 scripts/attack_layer_build.py T1059.001,80 T1053.005,60 T1566.001 --name 'Campaign TTPs' -o intel/attack/layer.json", timeout=30)`
 
 Fetch the Enterprise ATT&CK bundle once, then query it locally:
 `terminal(command="curl -sL https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json -o intel/attack/enterprise.json", timeout=120)`
@@ -103,6 +108,12 @@ mapping readable and the gaps obvious.
 
 ## Verification
 
+- Layer builder is offline-tested: `python3 -m pytest tests/test_attack_layer_build.py -q`
+  covers ID-format validation, malformed-ID rejection, duplicate-merge (max
+  score), and layer structure. A malformed ID exits non-zero:
+  `python3 scripts/attack_layer_build.py T99; echo $?` prints `2`.
+- The emitted layer loads and has one technique entry per unique mapped ID:
+  `python3 -c "import json;print(len(json.load(open('intel/attack/layer.json'))['techniques']))"`.
 - Each mapped ID resolves to a real ATT&CK technique in the bundle
   (`jq` lookup returns a name, not null).
 - Offline shape check: `echo '{"objects":[{"type":"attack-pattern","name":"Scheduled Task/Job: Scheduled Task","kill_chain_phases":[{"phase_name":"persistence"}],"external_references":[{"source_name":"mitre-attack","external_id":"T1053.005"}]}]}' | jq -r '.objects[] | select(.external_references[]?.external_id=="T1053.005") | .name'`

@@ -1,7 +1,7 @@
 ---
 name: threat-intel-reporting
 description: Write intel briefs and IOC packages.
-version: 0.1.0
+version: 0.2.0
 author: Pascal (pascal), Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -38,6 +38,11 @@ creates no new findings and takes no response action.
 - Optional: `markdown-to-pdf` (companion skill) to render `brief.md` → PDF.
 
 ## How to Run
+
+Assemble the Markdown brief from a single findings file (YAML or JSON) with the
+bundled offline builder. It renders the exec summary, ATT&CK/TTP table, a
+**defanged** IOC table, assessment, and recommendations:
+`terminal(command="python3 scripts/intel_report_build.py intel/<id>/findings.yaml -o intel/<id>/brief.md", timeout=30)`
 
 Build the machine-readable IOC package from an enriched-IOC JSON array with `jq`
 (no bundled script needed), then fill `templates/brief.md`:
@@ -103,6 +108,10 @@ rg -n '^## (Key Judgments|Prioritized CVEs|Campaign / TTP Summary|ATT&CK Mapping
 
 ## Verification
 
+- Brief builder is offline-tested: `python3 -m pytest tests/test_intel_report_build.py -q`
+  covers section rendering, IOC-table defang, placeholder handling, and the
+  missing-`subject` error path (exit 2). It never emits a raw (fanged) indicator
+  into the prose — the rendered table shows `1[.]2[.]3[.]4`, never `1.2.3.4`.
 - `python3 -c "import json,sys; json.load(open('intel/<id>/iocs.json'))"` exits 0
   (valid JSON STIX bundle); `iocs.csv` opens with the expected header columns.
 - The `rg` section check lists all required `brief.md` headings.

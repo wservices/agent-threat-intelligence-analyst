@@ -3,7 +3,7 @@
 # Fields validated against hermes_cli/profile_distribution.py (Hermes 0.21.x).
 
 name: threat-intelligence-analyst
-version: 0.1.0
+version: 0.2.0
 description: >-
   Threat intelligence analyst: tracks CVEs/vendor advisories and public exploits
   (KEV/EPSS), follows malware families and campaigns from public reporting, maps
